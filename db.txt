@@ -1,0 +1,231 @@
+db
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <form action="delete" method="post">
+
+        Id : <input type="text" name="id" id="id">
+        <input type="submit" value="delete" name="delete">
+    </form>
+</body>
+</html>
+
+
+
+app.js
+
+const express = require("express");
+const app = express();
+const path = require("path");
+const bodyParser = require("body-parser");
+const routes = require("./routes/router");
+
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
+
+app.set("views",path.join(__dirname,"views"));
+app.set("view engine","ejs");
+
+app.use("/",routes);
+
+app.listen(3002,function(){
+
+    console.log("Server Started at port 3002")
+}
+)
+module.exports = app;
+
+
+
+
+router.js
+
+const express = require('express');
+const myrouter = express.Router();
+const connection = require("../database/dbconnect");
+
+myrouter.get("/login", (req, res) => {res.render("Login");})
+
+myrouter.post("/login", (req, res) => {
+    connection.query("SELECT * FROM cms", (err, data, fields) => {
+        if(err){
+            res.status(404).send("data not found");
+        }
+        else{
+            res.json(data);
+        }
+    })
+})
+
+// get all courses details
+myrouter.get("/courses", function(req, resp){
+    connection.query("select * from cms", function(err, data, fields){
+        if(err){
+            resp.status(500).send("Data not found!!");
+        }else{
+            // display all the courses details
+            resp.json(data);
+        }
+    })
+})
+
+myrouter.get("/add",(req,res)=>{
+    res.render("AddCourse");
+    })
+    
+    myrouter.post("/insert",(req,res)=>{
+        connection.query("insert into cms values(default,?,?,?)",[req.body.cname,req.body.fees,req.body.duration],
+            (err,data,fields)=>{if(err){
+                res.status(500).send("insertion failed")
+            }
+        else{
+             res.status(200).send("Data added successfully")
+    
+        }})
+    })
+
+myrouter.get("/updateCourse",(req,res) =>{
+    res.render("UpdateCourse");
+})
+
+myrouter.post("/update",(req,res) => {
+    connection.query("update cms set cname=?, fees=?, duration=? where id=?",[req.body.cname,req.body.fees,req.body.duration,req.body.id],
+            (err,data,fields) => {
+            if(err){
+                res.status(500).send("updation failed!!")
+            }
+            else{
+                res.status(200).send("updation success!!")
+            }
+        }
+    )
+})
+
+myrouter.get("/deleteCourse",function(req,res){
+    res.render("DeleteCourse");
+})
+
+myrouter.post("/delete",function(req,res){
+    connection.query("delete from cms where id=?",[req.body.id],function(err,data){
+        if(err){
+            res.status(500).send("deletion failed!")
+        }else{
+            res.status(200).send("deletion success!")
+        }
+    })
+})
+
+module.exports = myrouter;
+
+
+
+AddCourse.ejs
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Document</title>
+</head>
+<body>
+    <form action="insert" method="post">
+        Course Name:<input type="text" id="cname" name="cname" required><br>
+        Fees:<input type="number" id="fees" name="fees" required><br>
+        Duration:<input type="number" id="duration" name="duration" required><br>
+        <input type="submit" id="add" name="Add">
+    </form>
+</body>
+</html>
+
+
+
+Login.ejs
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Document</title>
+    <script>
+        function validateEmail() {
+            var email = document.getElementById(mail).value;
+            if(email === "admin@123"){
+                return true;
+            }
+            else{
+            return false;
+            }
+        }
+        function password() {
+            var pass = document.getElementById(pass).value;
+            if(pass === "admin"){
+                return true;
+            }
+            else{
+            return false;
+            }
+        }
+          
+        function validateUser() {
+            var f1 = validateEmail();
+            var f2 = password();
+            return f1 && f2;
+        }
+    </script>
+</head>
+<body>
+    <form action="login" method="post" onsubmit="return validateUser()">
+    UserName : <input type="email" name="mail" id="mail" placeholder="Email" required><br>
+    Password : <input type="password" name="pass" id="pass" placeholder="Password" required><br>
+    <input type="submit" value="login" name="login">
+</form>
+</body>
+</html>
+
+
+updateCourse.ejs
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <form action="update" method="post">
+        Id : <input type="number" name="id" id="id"><br>
+        Name : <input type="text" name="name" id="name" > <br>
+        Fees : <input type="number" name="fees" id="fees" > <br>
+        Duration : <input type="number" name="duration" id="duration" > <br>
+        <input type="submit" value="submit" id="sub" name="update">
+    </form> 
+</body>
+</html>
+
+
+
+deleteCourse.ejs
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <form action="delete" method="post">
+
+        Id : <input type="text" name="id" id="id">
+        <input type="submit" value="delete" name="delete">
+    </form>
+</body>
+</html>
